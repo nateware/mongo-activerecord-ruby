@@ -147,6 +147,24 @@ module MongoRecord
       # Return the field names.
       def field_names; @field_names; end
 
+      # Creates an index for this collection.
+      def index(field_or_spec, unique=false)
+        if field_or_spec.is_a? Symbol
+          field_or_spec = field_or_spec.to_s
+        end
+        collection.create_index(field_or_spec, unique)
+      end
+
+      # Returns list of indexes for model, unless fields are passed.
+      # In that case, creates an index.
+      def indexes(*fields)
+        if fields.empty?
+          collection.index_information
+        else
+          index(*fields)
+        end
+      end
+
       # Return the names of all instance variables that hold objects
       # declared using has_one. The names do not start with '@'.
       #
