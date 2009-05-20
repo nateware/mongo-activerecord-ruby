@@ -18,6 +18,8 @@ A quick code sample:
   class Track < MongoRecord::Base
     collection_name :tracks
     fields :artist, :album, :song, :track
+    index :artist
+    
     def to_s
       "artist: #{artist}, album: #{album}, song: #@song, track: #{@track ? @track.to_i : nil}"
     end

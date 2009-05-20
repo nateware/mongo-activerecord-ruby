@@ -24,6 +24,7 @@ require File.join(File.dirname(__FILE__), 'class_in_module')
 class Track < MongoRecord::Base
   collection_name :tracks
   fields :artist, :album, :song, :track, :created_at
+  
   def to_s
     # Uses both accessor methods and ivars themselves
     "artist: #{artist}, album: #{album}, song: #@song, track: #{@track ? @track.to_i : nil}"
@@ -741,6 +742,14 @@ class MongoTest < Test::Unit::TestCase
     track.save
     p = Track.find(123)
     assert_equal p.artist, "Nickleback"
+  end
+  
+  def test_indexing
+    Track.index :artist
+    Track.index [[:album, XGen::Mongo::DESCENDING]], true
+    Track.index [[:artist, XGen::Mongo::ASCENDING], [:album, XGen::Mongo::ASCENDING]]
+    assert_equal([{"artist" => 1}, {"album" => -1}, {"artist" => 1, "album" => 1}], 
+      Track.indexes.map {|index| index[:keys]})
   end
 
 end

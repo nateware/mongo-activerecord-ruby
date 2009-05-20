@@ -148,6 +148,11 @@ module MongoRecord
       def field_names; @field_names; end
 
       # Creates an index for this collection.
+      # +field_or_spec+ should be either a single field name or a Array of 
+      # [field name, direction] pairs. Directions should be specified as
+      # XGen::Mongo::ASCENDING or XGen::Mongo::DESCENDING. 
+      # +unique+ is an optional boolean indicating whether this index 
+      # should enforce a uniqueness constraint.
       def index(field_or_spec, unique=false)
         if field_or_spec.is_a? Symbol
           field_or_spec = field_or_spec.to_s
