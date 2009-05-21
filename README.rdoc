@@ -19,7 +19,7 @@ A quick code sample:
     collection_name :tracks
     fields :artist, :album, :song, :track
     index :artist
-    
+
     def to_s
       "artist: #{artist}, album: #{album}, song: #@song, track: #{@track ? @track.to_i : nil}"
     end
@@ -83,6 +83,5 @@ Jim Mulholland, jim at squeejee dot com
 * Assigning created_at and updated_at fields even if they are not declared
 * Alias methods for "first", "last" and "all"
 
-== To Do
-
-* DBRefs
+Clinton R. Nixon, crnixon at gmail dot com
+* Ability to define and query indexes from models
