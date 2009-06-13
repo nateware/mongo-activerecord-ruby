@@ -148,16 +148,26 @@ module MongoRecord
       def field_names; @field_names; end
 
       # Creates an index for this collection.
-      # +field_or_spec+ should be either a single field name or a Array of
-      # [field name, direction] pairs. Directions should be specified as
-      # XGen::Mongo::ASCENDING or XGen::Mongo::DESCENDING.
-      # +unique+ is an optional boolean indicating whether this index
+      # +fields+ should be either a single field name (:title)
+      # or an array of fields ([:title, :author, :date])
+      # or an array of a field name and direction ([:title, :asc] or [:title, :desc])
+      # or an array of field names and directions ([[:title, :asc], [:author, :desc]])
+      # +unique+ should be true or false and indicates whether this index
       # should enforce a uniqueness constraint.
-      def index(field_or_spec, unique=false)
-        if field_or_spec.is_a? Symbol
-          field_or_spec = field_or_spec.to_s
+      def index(fields, unique = false)
+        fields = Array(fields)
+        
+        if fields.length == 2 && (fields[1].to_s == 'asc' || fields[1].to_s == 'desc')
+          fields = [fields]
         end
-        collection.create_index(field_or_spec, unique)
+        
+        fields = fields.map do |field| 
+          field = field.respond_to?(:[]) ? field : [field, :asc]
+          field[1] = (field[1] == :desc) ? XGen::Mongo::DESCENDING : XGen::Mongo::ASCENDING
+          field          
+        end
+        
+        collection.create_index(fields, unique)
       end
 
       # Returns list of indexes for model, unless fields are passed.
