@@ -157,7 +157,9 @@ module MongoRecord
       def index(fields, unique = false)
         fields = Array(fields)
         
-        if fields.length == 2 && (fields[1].to_s == 'asc' || fields[1].to_s == 'desc')
+        if fields.length == 2 && 
+          ( fields[1].to_s == 'asc' || fields[1].to_s == 'desc' ||
+            fields[1] == XGen::Mongo::ASCENDING || fields[1] == XGen::Mongo::DESCENDING )
           fields = [fields]
         end
         
