@@ -82,6 +82,7 @@ Jim Mulholland, jim at squeejee dot com
 * Find_last based on the created_at field
 * Assigning created_at and updated_at fields even if they are not declared
 * Alias methods for "first", "last" and "all"
+* Fix for sum method
 
 Clinton R. Nixon, crnixon at gmail dot com
 * Ability to define and query indexes from models
