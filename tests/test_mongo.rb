@@ -751,13 +751,11 @@ class MongoTest < Test::Unit::TestCase
     Track.index [:artist, [:album, :desc]]
     Track.index [:created_at, XGen::Mongo::ASCENDING]
 
-    assert_equal([ {"artist" => 1}, 
-                   {"artist" => 1, "created_at" => 1}, 
-                   {"song" => -1}, 
-                   {"artist" => 1, "album" => -1},
-                   {"created_at" => 1} ],
-                 Track.indexes.map {|index| index[:keys]}.delete_if { |keys| 
-                   keys.has_key? "_id" })
+    assert Track.indexes.has_key?("artist_1")
+    assert Track.indexes.has_key?("artist_1_created_at_1")
+    assert Track.indexes.has_key?("song_-1")
+    assert Track.indexes.has_key?("artist_1_album_-1")
+    assert Track.indexes.has_key?("created_at_1")
   end
 
 end
