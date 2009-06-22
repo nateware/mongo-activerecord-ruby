@@ -1,18 +1,16 @@
-#--
-# Copyright (C) 2009 10gen Inc.
+# Copyright 2009 10gen, Inc.
 #
-# This program is free software: you can redistribute it and/or modify it
-# under the terms of the GNU Affero General Public License, version 3, as
-# published by the Free Software Foundation.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-# FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License
-# for more details.
+# http://www.apache.org/licenses/LICENSE-2.0
 #
-# You should have received a copy of the GNU Affero General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
-#++
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 require 'rubygems'
 require 'mongo/types/objectid'
@@ -156,19 +154,19 @@ module MongoRecord
       # should enforce a uniqueness constraint.
       def index(fields, unique = false)
         fields = Array(fields)
-        
-        if fields.length == 2 && 
+
+        if fields.length == 2 &&
           ( fields[1].to_s == 'asc' || fields[1].to_s == 'desc' ||
             fields[1] == XGen::Mongo::ASCENDING || fields[1] == XGen::Mongo::DESCENDING )
           fields = [fields]
         end
-        
-        fields = fields.map do |field| 
+
+        fields = fields.map do |field|
           field = field.respond_to?(:[]) ? field : [field, :asc]
           field[1] = (field[1] == :desc) ? XGen::Mongo::DESCENDING : XGen::Mongo::ASCENDING
-          field          
+          field
         end
-        
+
         collection.create_index(fields, unique)
       end
 
