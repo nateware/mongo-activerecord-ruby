@@ -764,4 +764,11 @@ class MongoTest < Test::Unit::TestCase
     assert Track.indexes.has_key?("created_at_1")
   end
 
+  def test_subobject_create
+    Address.create(:street => "3 Pineapple Lane", :city => "Bikini Bottom", :state => "HI", :postal_code => "12345")
+    fail "expected can't create exception"
+  rescue => ex
+    assert_match /Subobjects can't be created/, ex.to_s
+  end
+
 end

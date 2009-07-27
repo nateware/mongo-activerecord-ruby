@@ -64,6 +64,11 @@ module MongoRecord
         complain("deleted")
       end
 
+      # Disallow create.
+      def create(values_hash)
+        complain("created")
+      end
+
       private
 
       def complain(cant_do_this)
@@ -87,11 +92,6 @@ module MongoRecord
 
     # Disallow new_record?
     def new_record?; raise "Subobjects don't have ids"; end
-
-    # Disallow create.
-    def create
-      self.class.complain("created")
-    end
 
     # Disallow udpate.
     def update
