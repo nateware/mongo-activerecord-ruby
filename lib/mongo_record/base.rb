@@ -193,8 +193,8 @@ module MongoRecord
       # Return the names of all fields, subobjects, and arrays.
       def mongo_ivar_names; @field_names + @subobjects.keys + @arrays.keys; end
 
-      # Tell Mongo about a subobject (which need not be a
-      # MongoRecord::Subobject).
+      # Tell Mongo about a subobject (which can be either a
+      # MongoRecord::Subobject or MongoRecord::Base instance).
       #
       # Options:
       # <code>:class_name<code> - Name of the class of the subobject.
@@ -213,8 +213,8 @@ module MongoRecord
         end
       end
 
-      # Tells Mongo about an array of subobjects (which need not be
-      # MongoRecord::Subobjects).
+      # Tells Mongo about an array of subobjects (which can be either a
+      # MongoRecord::Subobject or MongoRecord::Base instance).
       #
       # Options:
       # <code>:class_name</code> - Name of the class of the subobject.
