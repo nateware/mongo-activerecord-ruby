@@ -846,9 +846,9 @@ module MongoRecord
       create_date = self.instance_variable_defined?("@created_at") ? self.created_at : nil
       set_create_times(create_date)
       @_ns = self.class.collection.name
-      with_id = self.class.collection.insert(to_mongo_value)
-      @_id = with_id['_id'] || with_id[:_id]
-      with_id
+      value = to_mongo_value
+      @_id = self.class.collection.insert(value)
+      value.merge(:_id => @_id)
     end
 
     # Save self to the database. Return +false+ if there was an error,
