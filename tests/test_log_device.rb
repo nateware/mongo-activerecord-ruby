@@ -67,7 +67,7 @@ class LoggerTest < Test::Unit::TestCase
 
       coll = alt_db.collection('testlogger')
       assert_equal 1, coll.count()
-      rec = coll.find_first
+      rec = coll.find_one
       assert_not_nil rec
       assert_match /test message/, rec['msg']
     rescue => ex

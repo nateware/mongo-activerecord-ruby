@@ -495,7 +495,7 @@ module MongoRecord
       # def find_initial(options)
       #   criteria = criteria_from(options[:conditions]).merge!(where_func(options[:where]))
       #   fields = fields_from(options[:select])
-      #   row = collection.find_first(criteria, :fields => fields)
+      #   row = collection.find_one(criteria, :fields => fields)
       #   (row.nil? || row['_id'] == nil) ? nil : self.new(row)
       # end
 
@@ -541,7 +541,7 @@ module MongoRecord
         fields = fields_from(options[:select])
 
         if ids.length == 1
-          row = collection.find_first(criteria, :fields => fields)
+          row = collection.find_one(criteria, :fields => fields)
           raise RecordNotFound, "Couldn't find #{name} with ID=#{ids[0]} #{criteria.inspect}" if row == nil || row.empty?
           self.new(row)
         else
@@ -815,7 +815,7 @@ module MongoRecord
 
     # Return true if this object is new---that is, does not yet have an id.
     def new_record?
-      @_id.nil? || self.class.collection.find_first("_id" => @_id).nil?
+      @_id.nil? || self.class.collection.find_one("_id" => @_id).nil?
     end
 
     # Convert this object to a Mongo value suitable for saving to the
@@ -855,7 +855,7 @@ module MongoRecord
     # +self+ if all is well.
     def update
       set_update_times
-      self.class.collection.modify({:_id => @_id}, to_mongo_value)
+      self.class.collection.update({:_id => @_id}, to_mongo_value)
       if self.class.collection.db.error?
         return false
       end
