@@ -381,7 +381,7 @@ module MongoRecord
       def count(options={})
         criteria = criteria_from(options[:conditions],options[:criteria]).merge!(where_func(options[:where]))
         begin
-          collection.count(criteria)
+          collection.find(criteria).count()
         rescue => ex
           if ex.to_s =~ /Error with count command.*ns missing/
             # Return 0 because we will graciously assume that we are being
