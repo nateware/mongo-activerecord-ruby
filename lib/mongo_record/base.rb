@@ -22,11 +22,11 @@ require 'mongo_record/sql'
 class String
   # Convert this String to an ObjectID.
   def to_oid
-    XGen::Mongo::Driver::ObjectID.legal?(self) ? XGen::Mongo::Driver::ObjectID.from_string(self) : self
+    Mongo::ObjectID.legal?(self) ? XGen::Mongo::Driver::ObjectID.from_string(self) : self
   end
 end
 
-class XGen::Mongo::Driver::ObjectID
+class Mongo::ObjectID
   # Convert this object to an ObjectID.
   def to_oid
     self
@@ -39,7 +39,7 @@ module MongoRecord
     def create_pk(row)
       return row if row[:_id]
       row.delete(:_id)          # in case it is nil
-      row['_id'] ||= XGen::Mongo::Driver::ObjectID.new
+      row['_id'] ||= Mongo::ObjectID.new
       row
     end
   end
@@ -157,13 +157,13 @@ module MongoRecord
 
         if fields.length == 2 &&
           ( fields[1].to_s == 'asc' || fields[1].to_s == 'desc' ||
-            fields[1] == XGen::Mongo::ASCENDING || fields[1] == XGen::Mongo::DESCENDING )
+            fields[1] == Mongo::ASCENDING || fields[1] == Mongo::DESCENDING )
           fields = [fields]
         end
 
         fields = fields.map do |field|
           field = field.respond_to?(:[]) ? field : [field, :asc]
-          field[1] = (field[1] == :desc) ? XGen::Mongo::DESCENDING : XGen::Mongo::ASCENDING
+          field[1] = (field[1] == :desc) ? Mongo::DESCENDING : Mongo::ASCENDING
           field
         end
 
@@ -656,7 +656,7 @@ module MongoRecord
       # +func+ must be +nil+ or a JavaScript expression or function in a
       # string.
       def where_func(func)    # :nodoc:
-        func ? {'$where' => XGen::Mongo::Driver::Code.new(func)} : {}
+        func ? {'$where' => Mongo::Code.new(func)} : {}
       end
 
       def replace_named_bind_variables(str, h) # :nodoc:
@@ -826,11 +826,11 @@ module MongoRecord
       key_names.each {|key|
         value = instance_variable_get("@#{key}").to_mongo_value
         if value.instance_of? Hash and value["_ns"]
-          value = XGen::Mongo::Driver::DBRef.new(value["_ns"], value["_id"])
+          value = Mongo::DBRef.new(value["_ns"], value["_id"])
         elsif value.instance_of? Array
           value = value.map {|v|
             if v.instance_of? Hash and v["_ns"]
-              XGen::Mongo::Driver::DBRef.new(v["_ns"], v["_id"])
+              Mongo::DBRef.new(v["_ns"], v["_id"])
             else
               v
             end
@@ -955,7 +955,7 @@ module MongoRecord
     def init_ivar(ivar_name, val)
       sym = ivar_name[1..-1].to_sym
       if self.class.subobjects.keys.include?(sym)
-        if val.instance_of? XGen::Mongo::Driver::DBRef
+        if val.instance_of? Mongo::DBRef
           val = self.class.collection.db.dereference(val)
         end
         instance_variable_set(ivar_name, self.class.subobjects[sym].new(val))
@@ -963,7 +963,7 @@ module MongoRecord
         klazz = self.class.arrays[sym]
         val = [val] unless val.kind_of?(Array)
         instance_variable_set(ivar_name, val.collect {|v|
-                                if v.instance_of? XGen::Mongo::Driver::DBRef
+                                if v.instance_of? Mongo::DBRef
                                   v = self.class.collection.db.dereference(v)
                                 end
                                 v.kind_of?(MongoRecord::Base) ? v : klazz.new(v)

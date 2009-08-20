@@ -48,8 +48,8 @@ end
 class MongoTest < Test::Unit::TestCase
 
   @@host = ENV['MONGO_RUBY_DRIVER_HOST'] || 'localhost'
-  @@port = ENV['MONGO_RUBY_DRIVER_PORT'] || XGen::Mongo::Driver::Mongo::DEFAULT_PORT
-  @@db = XGen::Mongo::Driver::Mongo.new(@@host, @@port).db('mongorecord-test')
+  @@port = ENV['MONGO_RUBY_DRIVER_PORT'] || Mongo::Mongo::DEFAULT_PORT
+  @@db = Mongo::Mongo.new(@@host, @@port).db('mongorecord-test')
   @@students = @@db.collection('students')
   @@courses = @@db.collection('courses')
   @@tracks = @@db.collection('tracks')
@@ -65,13 +65,13 @@ class MongoTest < Test::Unit::TestCase
     @@playlists.clear
 
     # Manually insert data without using MongoRecord::Base
-    @@tracks.insert({:_id => XGen::Mongo::Driver::ObjectID.new, :artist => 'Thomas Dolby', :album => 'Aliens Ate My Buick', :song => 'The Ability to Swing'})
-    @@tracks.insert({:_id => XGen::Mongo::Driver::ObjectID.new, :artist => 'Thomas Dolby', :album => 'Aliens Ate My Buick', :song => 'Budapest by Blimp'})
-    @@tracks.insert({:_id => XGen::Mongo::Driver::ObjectID.new, :artist => 'Thomas Dolby', :album => 'The Golden Age of Wireless', :song => 'Europa and the Pirate Twins'})
-    @@tracks.insert({:_id => XGen::Mongo::Driver::ObjectID.new, :artist => 'XTC', :album => 'Oranges & Lemons', :song => 'Garden Of Earthly Delights', :track => 1})
-    @mayor_id = XGen::Mongo::Driver::ObjectID.new
+    @@tracks.insert({:_id => Mongo::ObjectID.new, :artist => 'Thomas Dolby', :album => 'Aliens Ate My Buick', :song => 'The Ability to Swing'})
+    @@tracks.insert({:_id => Mongo::ObjectID.new, :artist => 'Thomas Dolby', :album => 'Aliens Ate My Buick', :song => 'Budapest by Blimp'})
+    @@tracks.insert({:_id => Mongo::ObjectID.new, :artist => 'Thomas Dolby', :album => 'The Golden Age of Wireless', :song => 'Europa and the Pirate Twins'})
+    @@tracks.insert({:_id => Mongo::ObjectID.new, :artist => 'XTC', :album => 'Oranges & Lemons', :song => 'Garden Of Earthly Delights', :track => 1})
+    @mayor_id = Mongo::ObjectID.new
     @@tracks.insert({:_id => @mayor_id, :artist => 'XTC', :album => 'Oranges & Lemons', :song => 'The Mayor Of Simpleton', :track => 2})
-    @@tracks.insert({:_id => XGen::Mongo::Driver::ObjectID.new, :artist => 'XTC', :album => 'Oranges & Lemons', :song => 'King For A Day', :track => 3})
+    @@tracks.insert({:_id => Mongo::ObjectID.new, :artist => 'XTC', :album => 'Oranges & Lemons', :song => 'King For A Day', :track => 3})
 
     @mayor_str = "artist: XTC, album: Oranges & Lemons, song: The Mayor Of Simpleton, track: 2"
     @mayor_song = 'The Mayor Of Simpleton'
@@ -624,7 +624,7 @@ class MongoTest < Test::Unit::TestCase
   def test_alternate_connection
     old_db = MongoRecord::Base.connection
     assert_equal @@db, old_db
-    alt_db = XGen::Mongo::Driver::Mongo.new(@@host, @@port).db('mongorecord-test-alt-conn')
+    alt_db = Mongo::Mongo.new(@@host, @@port).db('mongorecord-test-alt-conn')
     assert_not_equal old_db, alt_db
     alt_db.drop_collection('students')
     begin
@@ -755,7 +755,7 @@ class MongoTest < Test::Unit::TestCase
     Track.index [:artist, :created_at]
     Track.index [:song, :desc], true
     Track.index [:artist, [:album, :desc]]
-    Track.index [:created_at, XGen::Mongo::ASCENDING]
+    Track.index [:created_at, Mongo::ASCENDING]
 
     assert Track.indexes.has_key?("artist_1")
     assert Track.indexes.has_key?("artist_1_created_at_1")

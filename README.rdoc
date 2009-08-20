@@ -22,7 +22,7 @@ A quick code sample:
   end
 
   MongoRecord::Base.connection =
-    XGen::Mongo::Driver::Mongo.new.db('mongorecord-test')
+    Mongo::Mongo.new.db('mongorecord-test')
 
   t = Track.new(:artist => 'Level 42', :album => 'Standing In The Light',
                 :song => 'Micro-Kid', :track => 1)

@@ -15,8 +15,8 @@ class Track < MongoRecord::Base
 end
 
 host = ENV['MONGO_RUBY_DRIVER_HOST'] || 'localhost'
-port = ENV['MONGO_RUBY_DRIVER_PORT'] || XGen::Mongo::Driver::Mongo::DEFAULT_PORT
-MongoRecord::Base.connection = XGen::Mongo::Driver::Mongo.new(host,port).db('mongorecord-test')
+port = ENV['MONGO_RUBY_DRIVER_PORT'] || Mongo::Mongo::DEFAULT_PORT
+MongoRecord::Base.connection = Mongo::Mongo.new(host,port).db('mongorecord-test')
 
 # Create data
 
@@ -24,12 +24,12 @@ puts "Creating 6 records using \"raw\" Mongo access..."
 db = MongoRecord::Base.connection
 coll = db.collection('tracks')
 coll.remove({})
-coll.insert({:_id => XGen::Mongo::Driver::ObjectID.new, :artist => 'Thomas Dolby', :album => 'Aliens Ate My Buick', :song => 'The Ability to Swing'})
-coll.insert({:_id => XGen::Mongo::Driver::ObjectID.new, :artist => 'Thomas Dolby', :album => 'Aliens Ate My Buick', :song => 'Budapest by Blimp'})
-coll.insert({:_id => XGen::Mongo::Driver::ObjectID.new, :artist => 'Thomas Dolby', :album => 'The Golden Age of Wireless', :song => 'Europa and the Pirate Twins'})
-coll.insert({:_id => XGen::Mongo::Driver::ObjectID.new, :artist => 'XTC', :album => 'Oranges & Lemons', :song => 'Garden Of Earthly Delights', :track => 1})
-coll.insert({:_id => XGen::Mongo::Driver::ObjectID.new, :artist => 'XTC', :album => 'Oranges & Lemons', :song => 'The Mayor Of Simpleton', :track => 2})
-song_id = XGen::Mongo::Driver::ObjectID.new
+coll.insert({:_id => Mongo::ObjectID.new, :artist => 'Thomas Dolby', :album => 'Aliens Ate My Buick', :song => 'The Ability to Swing'})
+coll.insert({:_id => Mongo::ObjectID.new, :artist => 'Thomas Dolby', :album => 'Aliens Ate My Buick', :song => 'Budapest by Blimp'})
+coll.insert({:_id => Mongo::ObjectID.new, :artist => 'Thomas Dolby', :album => 'The Golden Age of Wireless', :song => 'Europa and the Pirate Twins'})
+coll.insert({:_id => Mongo::ObjectID.new, :artist => 'XTC', :album => 'Oranges & Lemons', :song => 'Garden Of Earthly Delights', :track => 1})
+coll.insert({:_id => Mongo::ObjectID.new, :artist => 'XTC', :album => 'Oranges & Lemons', :song => 'The Mayor Of Simpleton', :track => 2})
+song_id = Mongo::ObjectID.new
 coll.insert({:_id => song_id, :artist => 'XTC', :album => 'Oranges & Lemons', :song => 'King For A Day', :track => 3})
 puts "Data created. One song_id = #{song_id}."
 puts "There are #{coll.count()} records in the tracks collection."
