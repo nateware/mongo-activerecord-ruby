@@ -15,8 +15,8 @@ class Track < MongoRecord::Base
 end
 
 host = ENV['MONGO_RUBY_DRIVER_HOST'] || 'localhost'
-port = ENV['MONGO_RUBY_DRIVER_PORT'] || Mongo::Mongo::DEFAULT_PORT
-MongoRecord::Base.connection = Mongo::Mongo.new(host,port).db('mongorecord-test')
+port = ENV['MONGO_RUBY_DRIVER_PORT'] || Mongo::Connection::DEFAULT_PORT
+MongoRecord::Base.connection = Mongo::Connection.new(host,port).db('mongorecord-test')
 
 # Create data
 

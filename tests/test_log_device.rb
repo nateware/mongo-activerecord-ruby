@@ -24,8 +24,8 @@ class LoggerTest < Test::Unit::TestCase
   MAX_RECS = 3
 
   @@host = ENV['MONGO_RUBY_DRIVER_HOST'] || 'localhost'
-  @@port = ENV['MONGO_RUBY_DRIVER_PORT'] || Mongo::Mongo::DEFAULT_PORT
-  @@db = Mongo::Mongo.new(@@host, @@port).db('mongorecord-test')
+  @@port = ENV['MONGO_RUBY_DRIVER_PORT'] || Mongo::Connection::DEFAULT_PORT
+  @@db = Mongo::Connection.new(@@host, @@port).db('mongorecord-test')
 
   def setup
     @@db.drop_collection('testlogger') # can't remove recs from capped colls
@@ -57,7 +57,7 @@ class LoggerTest < Test::Unit::TestCase
 
   def test_alternate_connection
     old_db = @@db
-    alt_db = Mongo::Mongo.new(@@host, @@port).db('mongorecord-test-log-device')
+    alt_db = Mongo::Connection.new(@@host, @@port).db('mongorecord-test-log-device')
     begin
       @@db = nil
       MongoRecord::LogDevice.connection = alt_db

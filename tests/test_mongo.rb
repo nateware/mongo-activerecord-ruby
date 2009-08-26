@@ -48,8 +48,8 @@ end
 class MongoTest < Test::Unit::TestCase
 
   @@host = ENV['MONGO_RUBY_DRIVER_HOST'] || 'localhost'
-  @@port = ENV['MONGO_RUBY_DRIVER_PORT'] || Mongo::Mongo::DEFAULT_PORT
-  @@db = Mongo::Mongo.new(@@host, @@port).db('mongorecord-test')
+  @@port = ENV['MONGO_RUBY_DRIVER_PORT'] || Mongo::Connection::DEFAULT_PORT
+  @@db = Mongo::Connection.new(@@host, @@port).db('mongorecord-test')
   @@students = @@db.collection('students')
   @@courses = @@db.collection('courses')
   @@tracks = @@db.collection('tracks')
@@ -624,7 +624,7 @@ class MongoTest < Test::Unit::TestCase
   def test_alternate_connection
     old_db = MongoRecord::Base.connection
     assert_equal @@db, old_db
-    alt_db = Mongo::Mongo.new(@@host, @@port).db('mongorecord-test-alt-conn')
+    alt_db = Mongo::Connection.new(@@host, @@port).db('mongorecord-test-alt-conn')
     assert_not_equal old_db, alt_db
     alt_db.drop_collection('students')
     begin
