@@ -42,7 +42,7 @@ Then install
 
   $ gem install mongo_record
 
-MongoRecord depends on the Mongo Ruby Driver, version 0.15 or higher.
+MongoRecord depends on the Mongo Ruby Driver, version 0.15.1 or higher.
 Installing the MongoRecord gem will also install the Mongo Ruby Driver if you
 don't have it already.
 

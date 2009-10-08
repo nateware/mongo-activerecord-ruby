@@ -5,7 +5,7 @@ Gem::Specification.new do |s|
   s.summary = 'ActiveRecord-like models for the 10gen Mongo DB'
   s.description = 'MongoRecord is an ActiveRecord-like framework for the 10gen Mongo database. For more information about Mongo, see http://www.mongodb.org.'
 
-  s.add_dependency('mongo', ['>= 0.15'])
+  s.add_dependency('mongo', ['>= 0.15.1'])
 
   s.require_paths = ['lib']
 

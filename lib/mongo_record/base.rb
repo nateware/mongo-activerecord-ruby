@@ -22,7 +22,7 @@ require 'mongo_record/sql'
 class String
   # Convert this String to an ObjectID.
   def to_oid
-    Mongo::ObjectID.legal?(self) ? XGen::Mongo::Driver::ObjectID.from_string(self) : self
+    Mongo::ObjectID.legal?(self) ? Mongo::ObjectID.from_string(self) : self
   end
 end
 
@@ -703,20 +703,19 @@ module MongoRecord
         sort_by = []
         case option
         when Symbol           # Single value
-          sort_by << {option.to_s => 1}
+          sort_by << [option.to_s, 1]
         when String
-          # TODO order these by building an array of hashes
           fields = option.split(',')
           fields.each {|f|
             name, order = f.split
             order ||= 'asc'
-            sort_by << {name.to_s => sort_value_from_arg(order)}
+            sort_by << [name.to_s, sort_value_from_arg(order)]
           }
         when Array            # Array of field names; assume ascending sort
           # TODO order these by building an array of hashes
-          sort_by = option.collect {|o| {o.to_s => 1}}
+          sort_by = option.collect {|o| [o.to_s, 1]}
         else                  # Hash (order of sorts is not guaranteed)
-          sort_by = option.collect {|k, v| {k.to_s => sort_value_from_arg(v)}}
+          sort_by = option.collect {|k, v| [k.to_s, sort_value_from_arg(v)]}
         end
         return nil unless sort_by.length > 0
         sort_by
