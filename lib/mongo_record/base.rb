@@ -110,6 +110,7 @@ module MongoRecord
         subclass.instance_variable_set("@field_names", []) # array of scalars names (symbols)
         subclass.instance_variable_set("@subobjects", {}) # key = name (symbol), value = class
         subclass.instance_variable_set("@arrays", {})     # key = name (symbol), value = class
+        subclass.field(:_id, :_ns)
       end
 
       # Call this method to set the Mongo collection name for this class.
@@ -117,7 +118,6 @@ module MongoRecord
       # lower_case_with_underscores.
       def collection_name(coll_name)
         @coll_name = coll_name
-        field(:_id, :_ns)
       end
 
       # Creates one or more collection fields. Each field will be saved to
@@ -769,22 +769,9 @@ module MongoRecord
       }
 
       # Create accessors for any per-row dynamic fields we got from our schemaless store
-      # http://stackoverflow.com/questions/185947/ruby-definemethod-vs-def
       self.instance_values.keys.each do |key|
-        next if respond_to?(key.to_sym)
-        ivar_name = "@" + key.to_s
-        instance_eval <<-EndAccessors
-          def #{key}
-            instance_variable_get('#{ivar_name}')
-          end
-          def #{key}=(val)
-            instance_variable_set('#{ivar_name}', val)
-          end
-          def #{key}?
-            val = instance_variable_get('#{ivar_name}')
-            val != nil && (!val.kind_of?(String) || val != '')
-          end
-        EndAccessors
+        next if respond_to?(key.to_sym)  # exists
+        define_instance_accessors(key)
       end
       
       yield self if block_given?
@@ -906,13 +893,13 @@ module MongoRecord
     end
 
     def []=(attr_name, value)
-      self.class.field(attr_name)
+      define_instance_accessors(attr_name)
       self.send(attr_name.to_s + '=', value)
     end
 
     def method_missing(sym, *args)
       if self.instance_variables.include?("@#{sym}")
-        self.class.field(sym)
+        define_instance_accessors(sym)
         return self.send(sym)
       else
         super
@@ -951,6 +938,9 @@ module MongoRecord
       save!
     end
 
+    def valid?; true; end
+    alias_method :respond_to_without_attributes?, :respond_to?
+    
     # Does nothing.
     def attributes_from_column_definition; end
 
@@ -1005,7 +995,27 @@ module MongoRecord
         val.send(:set_update_times, t) if val
       }
     end
-
+    
+    # Per-object accessors, since row-to-row attributes can change
+    # Use instance_eval so that they don't bleed over to other objects that lack the fields
+    def define_instance_accessors(*fields)
+      fields = Array(fields)
+      fields.each do |field|
+        ivar_name = "@" + field.to_s
+        instance_eval <<-EndAccessors
+          def #{field}
+            instance_variable_get('#{ivar_name}')
+          end
+          def #{field}=(val)
+            instance_variable_set('#{ivar_name}', val)
+          end
+          def #{field}?
+            val = instance_variable_get('#{ivar_name}')
+            val != nil && (!val.kind_of?(String) || val != '')
+          end
+        EndAccessors
+      end
+    end
   end
 
 end

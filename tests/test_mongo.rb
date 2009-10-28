@@ -98,6 +98,11 @@ class MongoTest < Test::Unit::TestCase
       assert t.instance_variable_defined?("@#{iv}")
     }
   end
+  
+  def test_new_record_set_correctly
+    t = Track.new(:_id => 12345, :artist => 'Alice In Chains')
+    assert_equal true, t.new_record?
+  end
 
   def test_method_generation
     x = Track.new({:artist => 1, :album => 2})
@@ -211,7 +216,7 @@ class MongoTest < Test::Unit::TestCase
     
     x.destroy
   end
-
+  
   def test_initialize_block
     track = Track.new { |t|
       t.artist = "Me'Shell Ndegeocello"
@@ -818,7 +823,30 @@ class MongoTest < Test::Unit::TestCase
     opts = {:artist => 'The Outfield', :album => 'Play Deep', :song => 'Your Love', :year => 1986}
     playlist = Playlist.new
     playlist.update_attributes(opts)
-    p = Playlist.find_by_artist("The Outfield")
+
+    # We *want* this to fail, because otherwise MongoRecord is buggy in the following
+    # situation:
+    #
+    #    Rails/Sinatra/etc server instance #1 does playlist.custom_field = 'foo'
+    #    Rails/Sinatra/etc instance #2 attempts to do Playlist.find_by_custom_field
+    #
+    # This will fail because, in previous versions of MongoRecord, the instance would callback
+    # into the class, and change its definition, then use this modified definition to determine
+    # whether dynamic finders work.
+    #
+    # The scary thing is you'll never catch this in dev, since everything is a single instance
+    # in memory.  It will manifest as strange mysterious production bugs.  As such, we *must*
+    # restrict dynamic accessors to only modifying the instance for each row, or else they corrupt
+    # the class.  This means find_by_whatever only works for fields defined via fields()
+    error = nil
+    begin
+      p = Playlist.find_by_artist("The Outfield")
+    rescue NoMethodError => error
+    end
+    assert_instance_of NoMethodError, error
+
+    # This should work though
+    p = Playlist.first(:conditions => {:artist => 'The Outfield'})
     assert_equal(p.year, 1986)
   end
 
