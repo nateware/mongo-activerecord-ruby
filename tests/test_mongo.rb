@@ -124,6 +124,94 @@ class MongoTest < Test::Unit::TestCase
     assert_nil(x.track)
   end
 
+  def test_dynamic_methods_in_new
+    x = Track.new({:foo => 1, :bar => 2})
+    y = Track.new({:artist => 3, :song => 4})
+
+    assert x.respond_to?(:_id)
+    assert x.respond_to?(:artist)
+    assert x.respond_to?(:album)
+    assert x.respond_to?(:song)
+    assert x.respond_to?(:track)
+    assert x.respond_to?(:_id=)
+    assert x.respond_to?(:artist=)
+    assert x.respond_to?(:album=)
+    assert x.respond_to?(:song=)
+    assert x.respond_to?(:track=)
+    assert x.respond_to?(:_id?)
+    assert x.respond_to?(:artist?)
+    assert x.respond_to?(:album?)
+    assert x.respond_to?(:song?)
+    assert x.respond_to?(:track?)
+    
+    # dynamic fields
+    assert x.respond_to?(:foo)
+    assert x.respond_to?(:bar)
+    assert x.respond_to?(:foo=)
+    assert x.respond_to?(:bar=)
+    assert x.respond_to?(:foo?)
+    assert x.respond_to?(:bar?)
+    
+    # make sure accessors only per-object
+    assert !y.respond_to?(:foo)
+    assert !y.respond_to?(:bar)
+    assert !y.respond_to?(:foo=)
+    assert !y.respond_to?(:bar=)
+    assert !y.respond_to?(:foo?)
+    assert !y.respond_to?(:bar?)
+
+    assert_equal(1, x.foo)
+    assert_equal(2, x.bar)
+    assert_nil(x.song)
+    assert_nil(x.track)
+    assert_equal(3, y.artist)
+    assert_equal(4, y.song)
+  end
+
+  def test_dynamic_methods_in_find
+    @@tracks.insert({:_id => 909, :artist => 'Faith No More', :album => 'Album Of The Year', :song => 'Stripsearch', :track => 2,
+                     :vocals => 'Mike Patton', :drums => 'Mike Bordin', :producers => ['Roli Mosimann', 'Billy Gould']})
+    x = Track.find_by_id(909)
+
+    # defined
+    assert x.respond_to?(:_id)
+    assert x.respond_to?(:artist)
+    assert x.respond_to?(:album)
+    assert x.respond_to?(:song)
+    assert x.respond_to?(:track)
+    assert x.respond_to?(:_id=)
+    assert x.respond_to?(:artist=)
+    assert x.respond_to?(:album=)
+    assert x.respond_to?(:song=)
+    assert x.respond_to?(:track=)
+    assert x.respond_to?(:_id?)
+    assert x.respond_to?(:artist?)
+    assert x.respond_to?(:album?)
+    assert x.respond_to?(:song?)
+    assert x.respond_to?(:track?)
+    
+    # dynamic fields
+    assert x.respond_to?(:vocals)
+    assert x.respond_to?(:drums)
+    assert x.respond_to?(:producers)
+    assert x.respond_to?(:vocals=)
+    assert x.respond_to?(:drums=)
+    assert x.respond_to?(:producers=)
+    assert x.respond_to?(:vocals?)
+    assert x.respond_to?(:drums?)
+    assert x.respond_to?(:producers?)
+
+    assert_equal 'Faith No More', x.artist
+    assert_equal 'Album Of The Year', x.album
+    assert_equal 'Stripsearch', x.song
+    assert_equal 2, x.track
+    assert_equal 'Mike Patton', x.vocals
+    assert_equal 'Mike Bordin', x.drums
+    assert_equal ['Roli Mosimann', 'Billy Gould'], x.producers
+    
+    x.destroy
+  end
+
   def test_initialize_block
     track = Track.new { |t|
       t.artist = "Me'Shell Ndegeocello"

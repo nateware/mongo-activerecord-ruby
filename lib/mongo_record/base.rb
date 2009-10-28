@@ -162,7 +162,7 @@ module MongoRecord
         end
 
         fields = fields.map do |field|
-          field = field.respond_to?(:[]) ? field : [field, :asc]
+          field = field.is_a?(Array) ? field : [field, :asc]
           field[1] = (field[1] == :desc) ? Mongo::DESCENDING : Mongo::ASCENDING
           field
         end
@@ -451,13 +451,13 @@ module MongoRecord
       # Example of updating multiple records:
       #   people = { 1 => { "first_name" => "David" }, 2 => { "first_name" => "Jeremy"} }
       #   Person.update(people.keys, people.values)
-      def update(id, attributes)
+      def update(id, attrib)
         if id.is_a?(Array)
           i = -1
-          id.collect { |id| i += 1; update(id, attributes[i]) }
+          id.collect { |id| i += 1; update(id, attrib[i]) }
         else
           object = find(id)
-          object.update_attributes(attributes)
+          object.update_attributes(attrib)
           object
         end
       end
@@ -767,7 +767,31 @@ module MongoRecord
         iv = "@#{iv}"
         instance_variable_set(iv, []) unless instance_variable_defined?(iv)
       }
+
+      # Create accessors for any per-row dynamic fields we got from our schemaless store
+      # http://stackoverflow.com/questions/185947/ruby-definemethod-vs-def
+      self.instance_values.keys.each do |key|
+        next if respond_to?(key.to_sym)
+        ivar_name = "@" + key.to_s
+        instance_eval <<-EndAccessors
+          def #{key}
+            instance_variable_get('#{ivar_name}')
+          end
+          def #{key}=(val)
+            instance_variable_set('#{ivar_name}', val)
+          end
+          def #{key}?
+            val = instance_variable_get('#{ivar_name}')
+            val != nil && (!val.kind_of?(String) || val != '')
+          end
+        EndAccessors
+      end
+      
       yield self if block_given?
+    end
+
+    def attributes
+      self.instance_values.inject({}){|h,iv| h[iv.first] = iv.last; h}
     end
 
     # Set the id of this object. Normally not called by user code.

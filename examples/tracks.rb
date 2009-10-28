@@ -29,11 +29,33 @@ coll.insert({:_id => Mongo::ObjectID.new, :artist => 'Thomas Dolby', :album => '
 coll.insert({:_id => Mongo::ObjectID.new, :artist => 'Thomas Dolby', :album => 'The Golden Age of Wireless', :song => 'Europa and the Pirate Twins'})
 coll.insert({:_id => Mongo::ObjectID.new, :artist => 'XTC', :album => 'Oranges & Lemons', :song => 'Garden Of Earthly Delights', :track => 1})
 coll.insert({:_id => Mongo::ObjectID.new, :artist => 'XTC', :album => 'Oranges & Lemons', :song => 'The Mayor Of Simpleton', :track => 2})
+coll.insert({:_id => Mongo::ObjectID.new, :artist => 'XTC', :album => 'Oranges & Lemons', :song => 'Foo town McFoo', :fooey => 'bar'})
 song_id = Mongo::ObjectID.new
 coll.insert({:_id => song_id, :artist => 'XTC', :album => 'Oranges & Lemons', :song => 'King For A Day', :track => 3})
 puts "Data created. One song_id = #{song_id}."
 puts "There are #{coll.count()} records in the tracks collection."
 
+puts "\nto_a"
+puts Track.all(conditions: {artist: /^Thomas/}).to_a
+puts "\nfirst"
+puts Track.first(conditions: {artist: /^Thomas/})
+
+puts "\nattrs"
+puts Track.first(conditions: {artist: /^Thomas/}).attributes
+
+puts "\nvalue"
+puts Track.first(conditions: {artist: /^Thomas/}).to_mongo_value
+
+puts "\nfooey"
+foo = Track.first(conditions: {fooey: 'bar'})
+puts foo.attributes
+puts foo.fooey
+puts foo.fooey?
+
+puts "\nnew field"
+puts track = Track.first
+
+exit
 
 puts "\nSimple find"
 puts Track.find(song_id).to_s
