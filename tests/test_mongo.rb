@@ -386,6 +386,19 @@ class MongoTest < Test::Unit::TestCase
     assert_no_match(/song: The Mayor Of Simpleton/, Track.find(:all).inject('') { |str, t| str + t.to_s })
   end
 
+  # def test_update_all
+  #   Track.update_all({:track => 919}, {:artist => 'XTC'})
+  #   tracks = Track.all.collect{|r| r }#assert_equal(919, r.track) if r.artist == 'XTC' }
+  #   Track.update_all({:song => 'Batman'})
+  #   assert_no_match(/song: The Mayor Of Simpleton/, Track.find(:all).inject('') { |str, t| str + t.to_s })
+  # 
+  #   Track.delete_all("song = 'King For A Day'")
+  #   assert_no_match(/song: King For A Day/, Track.find(:all).inject('') { |str, t| str + t.to_s })
+  # 
+  #   Track.delete_all()
+  #   assert_equal 0, Track.count
+  # end
+
   def test_delete_all
     Track.delete_all({:artist => 'XTC'})
     assert_no_match(/artist: XTC/, Track.find(:all).inject('') { |str, t| str + t.to_s })

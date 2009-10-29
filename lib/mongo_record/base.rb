@@ -410,10 +410,16 @@ module MongoRecord
         id.is_a?(Array) ? id.each { |oid| destroy(oid) } : find(id).destroy
       end
 
-      # Not yet implemented.
+      # This translates into a db.update call from the Mongo core API.  Currently
+      # it does not support SQL-like syntax, since Mongo is fundamentally different
+      # in this regard.  As such, you must use or Mongo operators.  For convenience,
+      # a {:key => value} element is shorthand for $set:
+      #
+      # Person.update_all({'$set' => {:name => 'Bob'}, '$inc' => {:age => 1}}, {:name => 'Fred'})
+      # Person.update_all({:name => 'Bob', '$inc' => {:age => 1}}, {:name => 'Fred'})
       def update_all(updates, conditions = nil)
-        # TODO
-        raise "not yet implemented"
+        raise NotImplementedError, 'update_all not implemented (Mongo does not support multiple updates at once)'
+        collection.update(criteria_from(conditions), update_fields_from(updates), :safe => true)
       end
 
       # Destroy all objects that match +conditions+. Warning: if
@@ -502,15 +508,21 @@ module MongoRecord
       def find_initial(options)
         options[:limit] = 1
         options[:order] = 'created_at asc'
-        row = find_every(options)
-        row.to_a[0]
+        find_one(options)
       end
 
       def find_last(options)
         options[:limit] = 1
         options[:order] = 'created_at desc'
+        find_one(options)
+      end
+
+      def find_one(options)
+        one = nil
         row = find_every(options)
-        row.to_a[0]
+        row.each{|r| one = r; break}  # short-circuit
+        row.close  # cleanup memory
+        one
       end
 
       def find_every(options)
@@ -735,6 +747,26 @@ module MongoRecord
         end
       end
 
+      # Turns {:key => 'Value'} in update_all into the appropriate '$set' operator
+      def update_fields_from(arg)
+        raise "Update spec for #{self.name}.update_all must be a hash" unless arg.is_a?(Hash)
+        updates = {}
+        arg.each do |key,val|
+          case val
+          when Hash
+            # Assume something like $inc => {:num => 1}
+            updates[key] = val
+          when Array, Range
+            raise "Array/range not supported in value of update spec"
+          else
+            # Assume a simple value, so change to $set
+            updates['$set'] ||= {}
+            updates['$set'][key] = val
+          end
+        end
+        updates
+      end
+
       # Overwrite the default class equality method to provide support for association proxies.
       def ===(object)
         object.is_a?(self)
@@ -957,6 +989,15 @@ module MongoRecord
       }
     end
 
+    #--
+    # ================================================================
+    # "Dirty" attribute tracking, adapted from ActiveRecord. This is
+    # a big performance boost, plus it avoids issues if two people
+    # are updating a record concurrently.
+    # ================================================================
+    #++
+
+
     private
 
     def create_or_update
@@ -995,7 +1036,7 @@ module MongoRecord
         val.send(:set_update_times, t) if val
       }
     end
-    
+
     # Per-object accessors, since row-to-row attributes can change
     # Use instance_eval so that they don't bleed over to other objects that lack the fields
     def define_instance_accessors(*fields)
@@ -1007,6 +1048,8 @@ module MongoRecord
             instance_variable_get('#{ivar_name}')
           end
           def #{field}=(val)
+            old = instance_variable_get('#{ivar_name}')
+            instance_variable_set('#{ivar_name}', val)
             instance_variable_set('#{ivar_name}', val)
           end
           def #{field}?
