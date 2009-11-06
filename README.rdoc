@@ -83,3 +83,13 @@ Jim Mulholland, jim at squeejee dot com
 
 Clinton R. Nixon, crnixon at gmail dot com
 * Ability to define and query indexes from models
+
+Nate Wiger, http://github.com/nateware
+* Optimization to first and last to close cursor and avoid expensive to_a
+* Implemented Model.update_all leveraging Mongo collection.update
+* Scoped dynamic finders to each instance, so rows with varying attributes work
+* Added row.attributes helper to enable use of ActiveRecord::Callbacks if desired
+
+
+
+

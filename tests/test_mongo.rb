@@ -386,18 +386,26 @@ class MongoTest < Test::Unit::TestCase
     assert_no_match(/song: The Mayor Of Simpleton/, Track.find(:all).inject('') { |str, t| str + t.to_s })
   end
 
-  # def test_update_all
-  #   Track.update_all({:track => 919}, {:artist => 'XTC'})
-  #   tracks = Track.all.collect{|r| r }#assert_equal(919, r.track) if r.artist == 'XTC' }
-  #   Track.update_all({:song => 'Batman'})
-  #   assert_no_match(/song: The Mayor Of Simpleton/, Track.find(:all).inject('') { |str, t| str + t.to_s })
-  # 
-  #   Track.delete_all("song = 'King For A Day'")
-  #   assert_no_match(/song: King For A Day/, Track.find(:all).inject('') { |str, t| str + t.to_s })
-  # 
-  #   Track.delete_all()
-  #   assert_equal 0, Track.count
-  # end
+  def test_update_all
+    Track.update_all({:track => 919}, {:artist => 'XTC'})
+    Track.all.each{|r| assert_equal(919, r.track) if r.artist == 'XTC' }
+
+    # Should fail (can't $inc/$set) - remove this test once Mongo 1.2 is out
+    error = nil
+    begin
+      Track.update_all({:song => 'Just Drums'}, {}, :safe => true)
+    rescue Mongo::OperationFailure => error
+    end
+    assert_instance_of Mongo::OperationFailure, error 
+
+    @@tracks.drop_index 'song_-1'  # otherwise update_all $set fails
+    Track.update_all({:song => 'Just Drums'}, {}, :safe => true)
+
+    assert_no_match(/song: Budapest by Blimp/, Track.all.inject('') { |str, t| str + t.to_s })
+
+    assert_equal 6, Track.count
+    Track.index [:song, :desc], true  # reindex
+  end
 
   def test_delete_all
     Track.delete_all({:artist => 'XTC'})
@@ -837,18 +845,18 @@ class MongoTest < Test::Unit::TestCase
     playlist = Playlist.new
     playlist.update_attributes(opts)
 
-    # We *want* this to fail, because otherwise MongoRecord is buggy in the following
+    # We *want* the following to fail, because otherwise MongoRecord is buggy in the following
     # situation:
     #
-    #    Rails/Sinatra/etc server instance #1 does playlist.custom_field = 'foo'
-    #    Rails/Sinatra/etc instance #2 attempts to do Playlist.find_by_custom_field
+    #    Rails/Sinatra/etc server instance #1 does: playlist.custom_field = 'foo'
+    #    Rails/Sinatra/etc instance #2 attempts to do: Playlist.find_by_custom_field
     #
     # This will fail because, in previous versions of MongoRecord, the instance would callback
-    # into the class, and change its definition, then use this modified definition to determine
-    # whether dynamic finders work.
+    # into class.field(), the changing the class definition, then use this modified definition to
+    # determine whether dynamic finders work.
     #
-    # The scary thing is you'll never catch this in dev, since everything is a single instance
-    # in memory.  It will manifest as strange mysterious production bugs.  As such, we *must*
+    # The biggest issue is you'll never catch this in dev, since everything is a single instance
+    # in memory.  It will manifest as mysterious "undefined method" production bugs.  As such, we *must*
     # restrict dynamic accessors to only modifying the instance for each row, or else they corrupt
     # the class.  This means find_by_whatever only works for fields defined via fields()
     error = nil

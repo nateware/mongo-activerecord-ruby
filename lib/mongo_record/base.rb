@@ -18,6 +18,7 @@ require 'mongo/types/code'
 require 'mongo/cursor'
 require 'mongo_record/convert'
 require 'mongo_record/sql'
+#require 'active_support/core_ext' # symbolize_keys!
 
 class String
   # Convert this String to an ObjectID.
@@ -130,6 +131,7 @@ module MongoRecord
           field = field.to_sym
           unless @field_names.include?(field)
             ivar_name = "@" + field.to_s
+            # this is better than lambda because it's only eval'ed once
             define_method(field, lambda { instance_variable_get(ivar_name) })
             define_method("#{field}=".to_sym, lambda { |val| instance_variable_set(ivar_name, val) })
             define_method("#{field}?".to_sym, lambda {
@@ -395,7 +397,7 @@ module MongoRecord
       end
 
       def sum(column)
-        x = self.find(:all, :select=>column)
+        x = all(:select => column)
         x.map {|p1| p1[column.to_sym]}.compact.inject(0) { |s,v| s += v }
       end
 
@@ -410,23 +412,28 @@ module MongoRecord
         id.is_a?(Array) ? id.each { |oid| destroy(oid) } : find(id).destroy
       end
 
-      # This translates into a db.update call from the Mongo core API.  Currently
-      # it does not support SQL-like syntax, since Mongo is fundamentally different
-      # in this regard.  As such, you must use or Mongo operators.  For convenience,
-      # a {:key => value} element is shorthand for $set:
+      # This updates all records matching the specified criteria.  It leverages the
+      # db.update call from the Mongo core API to guarantee atomicity.  You can
+      # specify either a hash for simplicity, or full Mongo API operators to the
+      # update part of the method call:
       #
+      # Person.update_all({:name => 'Bob'}, {:name => 'Fred'})
       # Person.update_all({'$set' => {:name => 'Bob'}, '$inc' => {:age => 1}}, {:name => 'Fred'})
-      # Person.update_all({:name => 'Bob', '$inc' => {:age => 1}}, {:name => 'Fred'})
-      def update_all(updates, conditions = nil)
-        raise NotImplementedError, 'update_all not implemented (Mongo does not support multiple updates at once)'
-        collection.update(criteria_from(conditions), update_fields_from(updates), :safe => true)
+      #
+      # Note that, due to a current limitation of Mongo, you can't use $inc/$set on an
+      # indexed field.  In this case, update_all will silently fail unless :safe => true
+      # is specified.
+      def update_all(updates, conditions = nil, options = {})
+        all(:conditions => conditions).each do |row|
+          collection.update(criteria_from(conditions).merge(:_id => row.id.to_oid), update_fields_from(updates), options)
+        end
       end
 
       # Destroy all objects that match +conditions+. Warning: if
       # +conditions+ is +nil+, all records in the collection will be
       # destroyed.
       def destroy_all(conditions = nil)
-        find(:all, :conditions => conditions).each { |object| object.destroy }
+        all(:conditions => conditions).each { |object| object.destroy }
       end
 
       # Deletes all records that match +condition+, which can be a
@@ -517,11 +524,19 @@ module MongoRecord
         find_one(options)
       end
 
+      # This does not work for some reason
+      # def find_one(options)
+      #   cursor = find_every(options)
+      #   one = cursor.next_object
+      #   cursor.close  # cleanup memory
+      #   one
+      # end
+
       def find_one(options)
         one = nil
-        row = find_every(options)
-        row.each{|r| one = r; break}  # short-circuit
-        row.close  # cleanup memory
+        cursor = find_every(options)
+        cursor.each{|row| one = row; break}  # short-circuit
+        cursor.close  # cleanup memory
         one
       end
 
@@ -534,7 +549,6 @@ module MongoRecord
         find_options[:limit] = options[:limit].to_i if options[:limit]
         find_options[:offset] = options[:offset].to_i if options[:offset]
         find_options[:sort] = sort_by_from(options[:order]) if options[:order]
-
 
         cursor = collection.find(criteria, find_options)
 
